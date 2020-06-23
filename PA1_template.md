@@ -12,23 +12,7 @@ opts_chunk$set(echo = TRUE,cache=TRUE)
 
 ```r
 library(dplyr)
-```
-
-```
-## 
-## Attaching package: 'dplyr'
-```
-
-```
-## The following objects are masked from 'package:stats':
-## 
-##     filter, lag
-```
-
-```
-## The following objects are masked from 'package:base':
-## 
-##     intersect, setdiff, setequal, union
+library(lattice)
 ```
 ## Loading and preprocessing the data
 1. loading the data from _"activity.zip"_ file :
@@ -37,7 +21,7 @@ library(dplyr)
 activity <- read.csv(unz("activity.zip","activity.csv"))
 ```
 
-2.processing the data as required by us :    
+2. processing the data as required by us :    
   `date field is still as character lets make it Date class.`   
 
 ```r
@@ -154,3 +138,23 @@ For the imputed data mean is 10766 and median is 10766.
 > Clearly both mean and median increased upon imputing the NAs in activity data
 
 ## Are there differences in activity patterns between weekdays and weekends?
+
+1. Adding a new factor variable :
+
+```r
+weekdaynames <- c("Monday","Tuesday","Wednesday","Thursday","Friday")
+imputed <- imputed %>% mutate(weekend = weekdays(date) %in% weekdaynames)
+```
+
+2. Panel plot of daily average steps as function of intervals in weekends and weekdays:
+
+```r
+by_inter_imp <- imputed %>% 
+           group_by(interval,weekend) %>%
+           summarise(tot_st = mean(steps,na.rm=T))
+by_inter_imp <- transform(by_inter_imp,weekend = factor(weekend,labels = c("weekend","weekday")))
+xyplot(tot_st ~ interval | weekend ,data = by_inter_imp,layout = c(1,2),
+       xlab = "interval",ylab = "steps",type = "l")
+```
+
+<img src="PA1_template_files/figure-html/plot-final-1.png" style="display: block; margin: auto;" />

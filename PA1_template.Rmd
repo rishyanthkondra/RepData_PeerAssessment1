@@ -8,8 +8,9 @@ output:
 library(knitr)
 opts_chunk$set(echo = TRUE,cache=TRUE)
 ```
-```{r loadpackages,results='hold'}
+```{r loadpackages,message=FALSE}
 library(dplyr)
+library(lattice)
 ```
 ## Loading and preprocessing the data
 1. loading the data from _"activity.zip"_ file :
@@ -17,7 +18,7 @@ library(dplyr)
 activity <- read.csv(unz("activity.zip","activity.csv"))
 ```
 
-2.processing the data as required by us :    
+2. processing the data as required by us :    
   `date field is still as character lets make it Date class.`   
 ```{r processing}
 activity$date <- as.Date(activity$date)
@@ -102,4 +103,18 @@ For the imputed data mean is `r as.integer(mean_imp)` and median is `r as.intege
 
 ## Are there differences in activity patterns between weekdays and weekends?
 
+1. Adding a new factor variable :
+```{r weekdays}
+weekdaynames <- c("Monday","Tuesday","Wednesday","Thursday","Friday")
+imputed <- imputed %>% mutate(weekend = weekdays(date) %in% weekdaynames)
+```
 
+2. Panel plot of daily average steps as function of intervals in weekends and weekdays:
+```{r plot-final,message=F,fig.align='center',fig.height=8}
+by_inter_imp <- imputed %>% 
+           group_by(interval,weekend) %>%
+           summarise(tot_st = mean(steps,na.rm=T))
+by_inter_imp <- transform(by_inter_imp,weekend = factor(weekend,labels = c("weekend","weekday")))
+xyplot(tot_st ~ interval | weekend ,data = by_inter_imp,layout = c(1,2),
+       xlab = "interval",ylab = "steps",type = "l")
+```
